@@ -11,6 +11,9 @@ public final class PressurizedPipes {
     public final static double mWater = 1e-3;
     public final static double vWater = 1.1e-6;
     public final static double rWater = 1000;
+    public final static NavigableSet standardDiameters = new TreeSet<Double>(List.of(
+            0.4, 2.4
+    ));
 
     public static double darcyWeisbach(double V, double R, double f){
         //Returns the slope of energy height for every type of pipe using the Darcy-Weisbach equation.
@@ -63,6 +66,34 @@ public final class PressurizedPipes {
             count++;
         } while((count < 5 || Math.abs(currentF - newF) > 1e-6) && count < 100);
         return D;
+    }
+
+    public static double localEnergyLosses(double V1, double V2, double K, double g){
+        return V1 > V2 ? K*V1*V1/(2*g) : K*V2*V2/(2*g);
+    }
+
+    public static double localEnergyLosses(double V1, double V2, double K){
+        return localEnergyLosses(V1, V2, K, g);
+    }
+
+    public static double kCoefDeviated(double D1, double D2){
+        if (D1 > D2)
+            return Math.pow(1 - D2/D1, 2);
+        else
+            return Math.pow(1 - D1/D2, 2);
+    }
+
+    public static double kCoefConvergent(double D1, double D2){
+        double ratio = D1/D2 > 1 ? D2/D1 : D1/D2;
+        if (ratio < 0.76)
+            return 0.42*(1 - ratio * ratio);
+        else
+            return kCoefDeviated(D1, D2);
+
+    }
+
+    public static double velocity(double Q, double D){
+        return Q * 8 / (Math.PI * D * D);
     }
 
     public static double reynoldsNumber(double V, double L, double v){
